@@ -1,0 +1,393 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
+/// <summary>
+/// Temel Kisi sınıfı (abstract). 
+/// Öğrenci ve ÖğretimGorevlisi bu sınıftan türeyecek.
+/// </summary>
+public abstract class Kisi
+{
+    public string Ad { get; set; }
+    public string Soyad { get; set; }
+    public string Email { get; set; }
+
+    public abstract void BilgiGoster();
+}
+
+/// <summary>
+/// Interface (IPerson). 
+/// Öğrenci ve ÖğretimGorevlisi bu arayüzü implemente edecek.
+/// </summary>
+public interface IPerson
+{
+    void Login(string email);
+    string KisiBilgi();
+}
+
+/// <summary>
+/// Ogrenci sınıfı
+/// Kisi temel sınıfından miras alıyor, IPerson arayüzünü implemente ediyor.
+/// </summary>
+public class Ogrenci : Kisi, IPerson
+{
+    public string OgrenciNo { get; set; }
+
+    public override void BilgiGoster()
+    {
+        Console.WriteLine($"[Öğrenci] {Ad} {Soyad} - No: {OgrenciNo} - Email: {Email}");
+    }
+
+    public void Login(string email)
+    {
+        Console.WriteLine($"Öğrenci {Ad} {Soyad} için giriş yapılıyor... Email: {email}");
+    }
+
+    // IPerson interface metodu
+    public string KisiBilgi()
+    {
+        return $"Öğrenci: {Ad} {Soyad}, No: {OgrenciNo}";
+    }
+}
+
+/// <summary>
+/// OgretimGorevlisi sınıfı
+/// Kisi temel sınıfından miras alıyor, IPerson arayüzünü implemente ediyor.
+/// </summary>
+public class OgretimGorevlisi : Kisi, IPerson
+{
+    public string SicilNo { get; set; }
+    public string Unvan { get; set; }
+
+    public override void BilgiGoster()
+    {
+        Console.WriteLine($"[Öğretim Görevlisi] {Unvan} {Ad} {Soyad} - Sicil: {SicilNo} - Email: {Email}");
+    }
+
+    public void Login(string email)
+    {
+        Console.WriteLine($"Öğretim Görevlisi {Ad} {Soyad} için giriş yapılıyor... Email: {email}");
+    }
+
+    public string KisiBilgi()
+    {
+        return $"Öğretim Görevlisi: {Unvan} {Ad} {Soyad}, Sicil: {SicilNo}";
+    }
+}
+
+/// <summary>
+/// Ders sınıfı
+/// Dersin adı, kredisi, derse giren öğretim görevlisi
+/// ve derse kayıtlı öğrencilerin listesi tutulur.
+/// </summary>
+public class Ders
+{
+    public string DersAdi { get; set; }
+    public int Kredi { get; set; }
+    public OgretimGorevlisi OgretimGorevlisi { get; set; }
+    public List<Ogrenci> KayitliOgrenciler { get; set; } = new List<Ogrenci>();
+
+    public void DersBilgisiGoster()
+    {
+        Console.WriteLine($"Ders: {DersAdi} (Kredi: {Kredi})");
+
+        if (OgretimGorevlisi != null)
+            Console.WriteLine($"Dersi Veren: {OgretimGorevlisi.KisiBilgi()}");
+
+        Console.WriteLine("----- Kayıtlı Öğrenciler -----");
+        foreach (var ogr in KayitliOgrenciler)
+        {
+            Console.WriteLine($" - {ogr.KisiBilgi()}");
+        }
+        Console.WriteLine("------------------------------");
+    }
+}
+
+/// <summary>
+/// JSON dosya işlemlerini yapan Helper sınıf.
+/// Bir listeyi dosyaya yazar veya dosyadan okur.
+/// </summary>
+public static class JsonHelper
+{
+    public static void WriteToJsonFile<T>(string filePath, List<T> list)
+    {
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        string jsonString = JsonSerializer.Serialize(list, options);
+        File.WriteAllText(filePath, jsonString);
+    }
+
+    public static List<T> ReadFromJsonFile<T>(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            return new List<T>();
+        }
+
+        string jsonString = File.ReadAllText(filePath);
+        return JsonSerializer.Deserialize<List<T>>(jsonString);
+    }
+}
+
+/// <summary>
+/// Program sınıfı - Konsol uygulamasının giriş noktası.
+/// Menu sistemi ile Öğrenci, Öğretim Görevlisi ve Ders yönetimi yapılır.
+/// </summary>
+class Program
+{
+    static string ogrenciFilePath = "ogrenciler.json";
+    static string ogretimGorevlisiFilePath = "ogretimGorevlileri.json";
+    static string dersFilePath = "dersler.json";
+
+    static void Main(string[] args)
+    {
+        while (true)
+        {
+            Console.WriteLine("\n=== Öğrenci ve Ders Yönetim Sistemi ===");
+            Console.WriteLine("1) Öğrenci Ekle");
+            Console.WriteLine("2) Öğretim Görevlisi Ekle");
+            Console.WriteLine("3) Ders Ekle");
+            Console.WriteLine("4) Tüm Öğrencileri Listele");
+            Console.WriteLine("5) Tüm Öğretim Görevlilerini Listele");
+            Console.WriteLine("6) Tüm Dersleri Listele");
+            Console.WriteLine("0) Çıkış");
+            Console.Write("Seçiminiz: ");
+
+            string secim = Console.ReadLine();
+
+            switch (secim)
+            {
+                case "1":
+                    OgrenciEkle();
+                    break;
+                case "2":
+                    OgretimGorevlisiEkle();
+                    break;
+                case "3":
+                    DersEkle();
+                    break;
+                case "4":
+                    OgrencileriListele();
+                    break;
+                case "5":
+                    OgretimGorevlileriniListele();
+                    break;
+                case "6":
+                    DersleriListele();
+                    break;
+                case "0":
+                    Console.WriteLine("Program sonlandırılıyor...");
+                    return;
+                default:
+                    Console.WriteLine("Geçersiz seçim! Lütfen tekrar deneyin.");
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 1) Öğrenci ekleme
+    /// </summary>
+    static void OgrenciEkle()
+    {
+        var ogrenciler = JsonHelper.ReadFromJsonFile<Ogrenci>(ogrenciFilePath);
+
+        Console.Write("Öğrenci Adı: ");
+        string ad = Console.ReadLine();
+
+        Console.Write("Öğrenci Soyadı: ");
+        string soyad = Console.ReadLine();
+
+        Console.Write("Öğrenci Email: ");
+        string email = Console.ReadLine();
+
+        Console.Write("Öğrenci No: ");
+        string ogrNo = Console.ReadLine();
+
+        var yeniOgrenci = new Ogrenci
+        {
+            Ad = ad,
+            Soyad = soyad,
+            Email = email,
+            OgrenciNo = ogrNo
+        };
+
+        ogrenciler.Add(yeniOgrenci);
+        JsonHelper.WriteToJsonFile(ogrenciFilePath, ogrenciler);
+
+        Console.WriteLine("Öğrenci başarıyla eklendi.");
+    }
+
+    /// <summary>
+    /// 2) Öğretim Görevlisi ekleme
+    /// </summary>
+    static void OgretimGorevlisiEkle()
+    {
+        var gorevliler = JsonHelper.ReadFromJsonFile<OgretimGorevlisi>(ogretimGorevlisiFilePath);
+
+        Console.Write("Öğr. Gör. Adı: ");
+        string ad = Console.ReadLine();
+
+        Console.Write("Öğr. Gör. Soyadı: ");
+        string soyad = Console.ReadLine();
+
+        Console.Write("Öğr. Gör. Email: ");
+        string email = Console.ReadLine();
+
+        Console.Write("Öğr. Gör. Sicil No: ");
+        string sicilNo = Console.ReadLine();
+
+        Console.Write("Ünvan (Doç. Dr., Prof. Dr. vb.): ");
+        string unvan = Console.ReadLine();
+
+        var yeniGorevli = new OgretimGorevlisi
+        {
+            Ad = ad,
+            Soyad = soyad,
+            Email = email,
+            SicilNo = sicilNo,
+            Unvan = unvan
+        };
+
+        gorevliler.Add(yeniGorevli);
+        JsonHelper.WriteToJsonFile(ogretimGorevlisiFilePath, gorevliler);
+
+        Console.WriteLine("Öğretim Görevlisi başarıyla eklendi.");
+    }
+
+    /// <summary>
+    /// 3) Ders ekleme
+    /// </summary>
+    static void DersEkle()
+    {
+        var dersler = JsonHelper.ReadFromJsonFile<Ders>(dersFilePath);
+        var gorevliler = JsonHelper.ReadFromJsonFile<OgretimGorevlisi>(ogretimGorevlisiFilePath);
+        var ogrenciler = JsonHelper.ReadFromJsonFile<Ogrenci>(ogrenciFilePath);
+
+        Console.Write("Ders Adı: ");
+        string dersAdi = Console.ReadLine();
+
+        Console.Write("Kredi: ");
+        if (!int.TryParse(Console.ReadLine(), out int kredi))
+        {
+            Console.WriteLine("Geçersiz kredi değeri! İşlem iptal edildi.");
+            return;
+        }
+
+        if (gorevliler.Count == 0)
+        {
+            Console.WriteLine("Sistemde henüz öğretim görevlisi bulunmuyor. Önce öğretim görevlisi eklemelisiniz.");
+            return;
+        }
+        Console.WriteLine("\nMevcut Öğretim Görevlileri:");
+        for (int i = 0; i < gorevliler.Count; i++)
+        {
+            Console.WriteLine($"{i + 1}) {gorevliler[i].KisiBilgi()}");
+        }
+
+        Console.Write("Dersi veren Öğretim Görevlisi (numarasını girin): ");
+        if (!int.TryParse(Console.ReadLine(), out int ogretimSecim) || ogretimSecim < 1 || ogretimSecim > gorevliler.Count)
+        {
+            Console.WriteLine("Geçersiz seçim! İşlem iptal edildi.");
+            return;
+        }
+        var secilenGorevli = gorevliler[ogretimSecim - 1];
+
+        List<Ogrenci> secilenOgrenciler = new List<Ogrenci>();
+        while (true)
+        {
+            Console.WriteLine("\nMevcut Öğrenciler:");
+            if (ogrenciler.Count == 0)
+            {
+                Console.WriteLine("Sistemde henüz öğrenci bulunmuyor. (0) seçip çıkabilirsiniz.");
+            }
+            for (int i = 0; i < ogrenciler.Count; i++)
+            {
+                Console.WriteLine($"{i + 1}) {ogrenciler[i].KisiBilgi()}");
+            }
+            Console.WriteLine("0) Tamam (Seçimi bitir)");
+
+            Console.Write("Derse kayıt olacak öğrenciyi seçin (0=Tamam): ");
+            if (!int.TryParse(Console.ReadLine(), out int ogrSecim) || ogrSecim < 0 || ogrSecim > ogrenciler.Count)
+            {
+                Console.WriteLine("Geçersiz seçim!");
+                continue;
+            }
+            if (ogrSecim == 0) 
+                break;
+
+            secilenOgrenciler.Add(ogrenciler[ogrSecim - 1]);
+        }
+
+        var yeniDers = new Ders
+        {
+            DersAdi = dersAdi,
+            Kredi = kredi,
+            OgretimGorevlisi = secilenGorevli,
+            KayitliOgrenciler = secilenOgrenciler
+        };
+
+        dersler.Add(yeniDers);
+        JsonHelper.WriteToJsonFile(dersFilePath, dersler);
+
+        Console.WriteLine("Ders başarıyla eklendi.");
+    }
+
+    /// <summary>
+    /// 4) Öğrencileri Listele
+    /// </summary>
+    static void OgrencileriListele()
+    {
+        var ogrenciler = JsonHelper.ReadFromJsonFile<Ogrenci>(ogrenciFilePath);
+        if (ogrenciler.Count == 0)
+        {
+            Console.WriteLine("\nHiç öğrenci kaydı bulunmuyor.");
+            return;
+        }
+
+        Console.WriteLine("\n=== Kayıtlı Öğrenciler ===");
+        foreach (var ogr in ogrenciler)
+        {
+            ogr.BilgiGoster();
+        }
+    }
+
+    /// <summary>
+    /// 5) Öğretim Görevlilerini Listele
+    /// </summary>
+    static void OgretimGorevlileriniListele()
+    {
+        var gorevliler = JsonHelper.ReadFromJsonFile<OgretimGorevlisi>(ogretimGorevlisiFilePath);
+        if (gorevliler.Count == 0)
+        {
+            Console.WriteLine("\nHiç öğretim görevlisi kaydı bulunmuyor.");
+            return;
+        }
+
+        Console.WriteLine("\n=== Kayıtlı Öğretim Görevlileri ===");
+        foreach (var g in gorevliler)
+        {
+            g.BilgiGoster();
+        }
+    }
+
+    /// <summary>
+    /// 6) Dersleri Listele
+    /// </summary>
+    static void DersleriListele()
+    {
+        var dersler = JsonHelper.ReadFromJsonFile<Ders>(dersFilePath);
+        if (dersler.Count == 0)
+        {
+            Console.WriteLine("\nHiç ders kaydı bulunmuyor.");
+            return;
+        }
+
+        Console.WriteLine("\n=== Kayıtlı Dersler ===");
+        foreach (var ders in dersler)
+        {
+            ders.DersBilgisiGoster();
+        }
+    }
+}
