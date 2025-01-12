@@ -1,0 +1,44 @@
+Base Class (Kişi Sınıfı)
+
+Tüm ortak özellikler (Ad, Soyad, Email vb.) tanımlanır.
+Örneğin Kisi adında bir temel sınıf.
+Interface (IPerson)
+
+Ortak davranışları (örneğin BilgiGoster() veya Login()) tanımlayabilirsiniz.
+Öğrenci ve ÖğretimGörevlisi sınıfları bu interface’i uygular.
+Türetilmiş Sınıflar (Öğrenci, ÖğretimGörevlisi)
+
+Kisi temel sınıfından miras alırlar.
+IPerson interface’ini uygularlar.
+Kendi özel alanları (ÖğrenciNo, Bölüm, SicilNo, Unvan vb.) olur.
+Polimorfik metodları override ederler. (Örneğin BilgiGoster())
+Ders Sınıfı (Course)
+
+Ders Adı, Kredisi, Öğretim Görevlisi ve bu derse kayıtlı öğrenciler tutulur.
+Local bir JSON/XML dosyasında saklanabilir.
+Dosya İşlemleri (Json / Xml)
+
+Öğrenci, ÖğretimGörevlisi, Ders gibi veriler ayrı ayrı JSON/Xml dosyalarında saklanabilir.
+Örneğin:
+ogrenciler.json
+ogretimGorevlileri.json
+dersler.json
+Her yeni kayıt eklendiğinde dosyaya yazılır. Listeleme işlemi dosyadan okunarak yapılır.
+Console Uygulaması
+
+Menu yapısıyla kullanıcıdan girdi alınır:
+Öğrenci ekle
+Öğretim Görevlisi ekle
+Ders Ekle
+Tüm Öğrencileri Listele
+Tüm Öğretim Görevlilerini Listele
+Tüm Dersleri Listele
+
+Sonuç
+Base Class (Kisi) ve ondan türeyen Ogrenci ile OgretimGorevlisi sınıfları oluşturuldu.
+Her iki sınıf da IPerson arayüzünden (interface) metotlar implement etti.
+Ders sınıfı içinde, derse ait bilgiler ve kayıtlı öğrencilerin listesi tutuldu.
+Her entity (Ogrenci, OgretimGorevlisi, Ders) kendi JSON (veya XML) dosyasında saklandı.
+Konsol menüsünden seçim yaparak ekleme ve listeleme işlemleri, dosya üzerinden gerçekleştirildi.
+BilgiGoster() metodunun override edilmesiyle polymorphism örneği gösterildi.
+
